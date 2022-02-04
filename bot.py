@@ -19,6 +19,8 @@ import logging
 import os
 import pickle
 # from dotenv import load_dotenv
+PORT = int(os.environ.get('PORT', '8443'))
+
 # load_dotenv()
 USERINFO = {}  # holds user information
 CAPTCHA_DATA = {}
@@ -33,10 +35,6 @@ AIRDROP_NETWORK = os.environ["AIRDROP_NETWORK"]
 REFERRAL_REWARD = float(os.environ["REFERRAL_REWARD"])
 COIN_PRICE = os.environ["COIN_PRICE"]
 WEBSITE_URL = os.environ["WEBSITE_URL"]
-MONGO_USER = os.environ["MONGO_INITDB_ROOT_USERNAME"]
-MONGO_PASSWORD = os.environ["MONGO_INITDB_ROOT_PASSWORD"]
-MONGO_IP = os.environ["MONGO_INITDB_IP"]
-MONGO_PORT = os.environ["MONGO_INITDB_PORT"]
 EXPLORER_URL = os.environ["EXPLORER_URL"]
 ADMIN_USERNAME = os.environ["ADMIN_USERNAME"]
 
@@ -50,28 +48,11 @@ TWITTER_LINKS = TWITTER_LINKS.split(",")
 TELEGRAM_LINKS = TELEGRAM_LINKS.split(",")
 TWITTER_LINKS = "\n".join(TWITTER_LINKS)
 TELEGRAM_LINKS = "\n".join(TELEGRAM_LINKS)
-STATUS_PATH = "./conversationbot/botconfig.p"
-if os.path.exists(STATUS_PATH):
-    BOT_STATUS = {}
-    pickle.load(open(STATUS_PATH, "rb"))
-else:
-    BOT_STATUS = {"status": "ON"}
 
-# %% MONGODB CONNECTION
-CONNECTION_STRING = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_IP}:{MONGO_PORT}/?authSource=admin"
-myclient = pymongo.MongoClient(CONNECTION_STRING)
-mydb = myclient["airdrop"]
-users = mydb["users"]
-users.create_index([('ref', pymongo.TEXT)], name='search_index', default_language='english')
-users.create_index("userId")
 # %% Setting up things
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-print(BOT_TOKEN)
-persistence = PicklePersistence(filename='conversationbot/conversationbot')
-updater = Updater(token=BOT_TOKEN, use_context=True, persistence=persistence)
-dispatcher = updater.dispatcher
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 
+logger = logging = logger(_neme_)
 # %% Message Strings
 if(COIN_PRICE == "0"):
     SYMBOL = ""
@@ -504,5 +485,17 @@ dispatcher.add_handler(CommandHandler("stats", getStats))
 dispatcher.add_handler(CommandHandler("bot", setStatus))
 dispatcher.add_handler(conv_handler)
 # %% start the bot
-updater.start_polling()
-updater.idle()
+    updater.start_webhook(
+        listen="0.0.0.0",
+        port=int(PORT),
+        url_path=TOKEN,
+        webhook_url='https://telegrambotes.herokuapp.com/' + BOT_TOKEN
+    )
+
+    # Run the bot until you press Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT. This should be used most of the time, since
+    # start_polling() is non-blocking and will stop the bot gracefully.
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
